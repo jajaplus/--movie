@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <link rel="stylesheet" href="http://at.alicdn.com/t/font_691247_j78rg3329jksm7vi.css">
-    <script src="https://code.jquery.com/jquery-2.0.3.js"></script>
+    <script src="https://code.jquery.com/jquery-3.0.0.js"></script>
     <style>
         .iconfont {
             font-size: 3vh;
@@ -27,10 +27,8 @@
             background: white;
         }
         .click {
-            display: inline-block;
-            
-        }
-        
+            display: inline-block;           
+        }       
         .hide {
             display: none;
         }
@@ -93,6 +91,9 @@
             from{-webkit-transform:rotate(0deg);}
             to{-webkit-transform:rotate(360deg);}
         }
+        .main {
+            margin-bottom: calc(6vh+22px);
+        }
     </style>
 </head>
 <body>
@@ -108,8 +109,7 @@
                     <div class="dir">333333</div>
                     <div class="actor">444444</div>
                 </div>
-            </div> -->
-            
+            </div> -->            
         </div>
         <div class="box hide"></div>
         <div class="box hide">
@@ -132,7 +132,6 @@
             <p>搜索</p>
         </a>
     </div>
-
     <script>
         $('.click').on('click',function(){
             console.log($(this))
@@ -143,128 +142,98 @@
             })
         })
         var index = 0
-        var isDataArrive = false
-        
-
-
-
-
-        function getData(url,callback,q){
-            $('.loading').removeClass('hide')
-            q = $('#search').val()
-            $.ajax({
-                url:url,
-                type:'GET',
-                data:{
-                    start:index,
-                    count:10,
-                    q:q
-                    
+        var index0 = 0
+        var clock
+        var app = {
+            init:function(url,boxnumber){
+                var isDataArrive = false
+                var index = 0
+                this.start(url,boxnumber)
+                this.isVisble(boxnumber)
+            },
+            getData:function(callback,url,boxnumber){
+                q = $('#search').val()
+                $('.loading').removeClass('hide')
+                $.ajax({
+                    url:url,
+                    type:'GET',
+                    data:{
+                        start:index,
+                        count:10,
+                        q:q
+                    },
+                    dataType:'jsonp'
+                }).done(function(ret){
+                    console.log(ret)
+                    if(boxnumber==0||boxnumber==2){index +=10}
+                    if(boxnumber==0){index0 +=10 ; index = index0}
+                    console.log(index)
+                    callback(ret.subjects)
+                    isDataArrive=true
+                    $('.loading').addClass('hide')
+                    }).fail(function(){
+                    console.log('error...')
+                    })
                 },
-                dataType:'jsonp'
-            }).done(function(ret){
-                console.log(ret)
-                console.log(q)
-                index +=10
-                callback(ret.subjects)
-                isDataArrive=true
-                $('.loading').addClass('hide')
-            }).fail(function(){
-                console.log('error...')
-            })
-           
-        }
-        function start(url,boxnumber){
-            getData(url,function(subjects){
-                subjects.forEach(function(arr,index){
-                    var actor=[]
-                    for(i=0;i<arr.casts.length;i++){
-                        actor[i]=arr.casts[i].name
-                    }
-                    $('.box').eq(boxnumber).append(
-                        '<div class="subject">'
-                            +'<img src='+arr.images.medium+' alt="">'
-                            +'<div class="info">'
-                                +'<div class="title">'+arr.title+'</div>'
-                                +'<div class="val"><span class="score">'+arr.rating.average+'</span>分/'+arr.collect_count+'收藏</div>'
-                                +'<div class="type">'+arr.year+'/'+arr.genres.join('/')+'</div>'
-                                +'<div class="dir">导演:'+arr.directors.name+'</div>'
-                                +'<div class="actor">演员:'+actor.join('、')+'</div>'
-                            +'</div>'
+            start:function(url,boxnumber){
+                var _this=this
+                this.getData(function(subjects){
+                    subjects.forEach(function(arr){
+                          if(boxnumber==1){_this.putItem(arr.subject,boxnumber)}
+                          else{_this.putItem(arr,boxnumber)}
+                        })
+                    },url,boxnumber)
+                    isDataArrive=false
+                },
+            isVisble:function(boxnumber){
+                    return $(window).scrollTop()+$(window).height()>=$('.box').eq(boxnumber).height()
+                },
+            putItem:function(arr,boxnumber){
+                var actor=[]
+                for(i=0;i<arr.casts.length;i++){
+                    actor[i]=arr.casts[i].name
+                }
+                $('.box').eq(boxnumber).append(
+                    '<div class="subject">'
+                        +'<img src='+arr.images.medium+' alt="">'
+                        +'<div class="info">'
+                            +'<div class="title">'+arr.title+'</div>'
+                            +'<div class="val"><span class="score">'+arr.rating.average+'</span>分/'+arr.collect_count+'收藏</div>'
+                            +'<div class="type">'+arr.year+'/'+arr.genres.join('/')+'</div>'
+                            +'<div class="dir">导演:'+arr.directors.name+'</div>'
+                            +'<div class="actor">演员:'+actor.join('、')+'</div>'
                         +'</div>'
-                    )
-                })
-            })
-            isDataArrive=false
-        }   
-
-        function start2(url){
-            getData(url,function(subjects){
-                subjects.forEach(function(arr,index){
-                    var actor=[]
-                    for(i=0;i<arr.subject.casts.length;i++){
-                        actor[i]=arr.subject.casts[i].name
+                    +'</div>'
+                    ) 
+                },
+            check:function(url,boxnumber){
+                    if(!isDataArrive) return
+                    if(this.isVisble(boxnumber)&&!$('.box').eq(boxnumber).hasClass('hide')){
+                    this.start(url,boxnumber)
                     }
-                    $('.box').eq('1').append(
-                        '<div class="subject">'
-                            +'<img src='+arr.subject.images.medium+' alt="">'
-                            +'<div class="info">'
-                                +'<div class="title">'+arr.subject.title+'</div>'
-                                +'<div class="val"><span class="score">'+arr.subject.rating.average+'</span>分/'+arr.subject.collect_count+'收藏</div>'
-                                +'<div class="type">'+arr.subject.year+'/'+arr.subject.genres.join('/')+'</div>'
-                                +'<div class="dir">导演:'+arr.subject.directors.name+'</div>'
-                                +'<div class="actor">演员:'+actor.join('、')+'</div>'
-                            +'</div>'
-                        +'</div>'
-                    )
+                },
+            scroll:function(url,boxnumber){
+                var _this=this
+                $(window).scroll(function(){
+                    if(clock){clearTimeout(clock)}
+                    clock=setTimeout(_this.check(url,boxnumber),300)
                 })
-            })
-            isDataArrive=false
-        }   
-        function isVisble(index){
-            return $(window).scrollTop()+$(window).height()>=$('.box').eq(index).height()
-        }
-
-
-
-
-        start('http://api.douban.com/v2/movie/top250',0)
-        $(window).scroll(function(){
-            if(!isDataArrive) return
-            if(isVisble(0)){
-                start('http://api.douban.com/v2/movie/top250',0)
-                
+                },
+            dosth:function(url,boxnumber){
+                this.init(url,boxnumber)
+                this.scroll(url,boxnumber)
             }
-        })
-        
+        }       
+        app.dosth('http://api.douban.com/v2/movie/top250',0)         
 
         $('.click').eq('1').on('click',function(){
-            start2('http://api.douban.com/v2/movie/us_box')
-            $(window).scroll(function(){
-            if(!isDataArrive) return
-            if(isVisble(1)){
-                start2('http://api.douban.com/v2/movie/us_box')
-                
-            }
+            app.init('http://api.douban.com/v2/movie/us_box',1)
         })
-        })
-        
-        
+
         $('button').on('click',function(){
-            
-            start('http://api.douban.com/v2/movie/search',2)
-            $(window).scroll(function(){
-            if(!isDataArrive) return
-            if(isVisble(2)){
-            start('http://api.douban.com/v2/movie/search',2)
-            
-                }
-            })
-        })
-            
-        
-        
-       
+            index = 0
+            app.dosth('http://api.douban.com/v2/movie/search',2)           
+        })  
     </script>
 </body>
 </html>
