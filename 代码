@@ -92,7 +92,7 @@
             to{-webkit-transform:rotate(360deg);}
         }
         .main {
-            margin-bottom: calc(6vh+22px);
+            margin-bottom: 70px;
         }
     </style>
 </head>
